@@ -1,0 +1,6 @@
+fastapi
+langchain
+uvicorn[standard]  # Required to run FastAPI on Vercel
+pinecone
+langchain-community  # Include this to avoid the error
+sentence-transformers
