@@ -7,7 +7,7 @@ websockets==12.0
 
 
 langchain==0.0.267  # Minimal version that supports langchain_huggingface and langchain_pinecone
-langchain_huggingface==0.0.13  # Check for the latest compatible version
+langchain_huggingface==0.0.3  # Check for the latest compatible version
 langchain_pinecone==0.0.10  # Check for the latest compatible version
 pinecone-client==2.0.0
 # Add other dependencies as needed
