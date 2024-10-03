@@ -110,7 +110,6 @@ QUERY = "which are eastern zones"
 @app.get("/")              
 async def search():
     # **Similarity Search**
-    
     try:
         # Perform similarity search
         results = vector_store.similarity_search(QUERY)
