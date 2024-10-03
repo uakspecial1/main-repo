@@ -6,8 +6,8 @@ uvicorn==0.27.1
 websockets==12.0
 
 
-langchain==0.0.267  # Minimal version that supports langchain_huggingface and langchain_pinecone
+langchain==0.3.1  # Minimal version that supports langchain_huggingface and langchain_pinecone
 langchain_huggingface==0.0.3  # Check for the latest compatible version
 langchain_pinecone==0.1.3    # Check for the latest compatible version
 pinecone-client>=5.0.0  # Add other dependencies as needed
-langchain-core==0.2.41
+langchain-core==0.3.6
