@@ -9,8 +9,7 @@
   "functions": {
     "api/main.py": {
       "memory": 1024,  
-      "maxDuration": 10,  
-      "maxSize": "50mb"  
+      "maxDuration": 10 
     }
   }
 }
