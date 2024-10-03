@@ -1,12 +1,16 @@
 {
-    "version": 2,
-    
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "api/main.py"
-      }
-    ]
+  "version": 2,
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "api/main.py"
+    }
+  ],
+  "functions": {
+    "api/main.py": {
+      "memory": 1024,  
+      "maxDuration": 10,  
+      "maxSize": "50mb"  
+    }
   }
-  
-  
+}
