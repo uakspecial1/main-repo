@@ -1,6 +1,6 @@
-fastapi
-langchain
-uvicorn[standard]  # Required to run FastAPI on Vercel
-pinecone
-langchain-community  # Include this to avoid the error
-sentence-transformers
+aiofiles==23.2.1
+fastapi==0.110.0
+openai==1.12.0
+python-multipart==0.0.9
+uvicorn==0.27.1
+websockets==12.0

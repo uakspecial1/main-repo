@@ -104,13 +104,13 @@ vector_store = LC_Pinecone(index, embeddings.embed_query, embeddings.embed_docum
 # Add documents to the index
 vector_store.add_texts([doc.page_content for doc in docs])
 
-
+QUERY = "which are eastern zones"
 
 # Define the endpoint
 @app.get("/")              
 async def search():
     # **Similarity Search**
-    QUERY = "which are eastern zones"
+    
     try:
         # Perform similarity search
         results = vector_store.similarity_search(QUERY)
