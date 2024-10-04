@@ -135,10 +135,7 @@ from langchain.schema import Document
 app = FastAPI()
 
 # **Load the Data**
-data = """ Eastern Zone: Bengal, Bihar, Orissa, Assam:
- Achcha, now the group of kumars from abroad:
- You had a very good bhatti. You enjoyed it very much. Kumars will perform wonders. Kumars can do whatever they want. You are doing it and will continue to do it in the future. You are going to do it, are you not? All of you are clever. BapDada is seeing from your faces that all of you are courageous. Congratulations for your courage. Very good! BapDada has seen you. Now you won’t complain that no one has seen you, will you? BapDada has seen each one of you. You have worked well.
- """
+data = """ Eastern Zone: Bengal, Bihar, Orissa, Assam:"""
 
 # **Split the Text into Chunks**
 data1 = [Document(page_content=data)]
