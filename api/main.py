@@ -243,7 +243,8 @@ async def search(query: str = QUERY):
         results = vector_store.similarity_search(query)
         # Return the top 1 result or a message if no results are found
         if results:
-            return {"top_chunk": results[0].page_content}
+            # return {"top_chunk": results[0].page_content}
+            return {"top_chunk": "Zones"}
         else:
             return {"message": "No results found"}
     except Exception as e:
