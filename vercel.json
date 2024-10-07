@@ -4,7 +4,7 @@
     "routes": [
       {
         "src": "/(.*)",
-        "dest": "api/main.py"
+        "dest": "api/Spiritual_Chatbot_Model-Copy1.py"
       }
     ]
   }
