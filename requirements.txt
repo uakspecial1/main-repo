@@ -1,4 +1,5 @@
 langchain
+langchain_community
 pinecone-client
 beautifulsoup4
 fastapi
