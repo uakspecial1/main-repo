@@ -134,8 +134,7 @@ def process_file(file_path):
         return result
     return "No data found."
 
-# Example usage
-file_path = r"\AMurli18Feb93English.htm"
+file_path = r"AMurli18Feb93English.htm"
 extracted_data = process_file(file_path)
 
 data = extracted_data
