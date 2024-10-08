@@ -1,5 +1,4 @@
 langchain
-sentence-transformers
 pinecone-client
 beautifulsoup4
 fastapi

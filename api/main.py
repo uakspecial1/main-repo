@@ -1,10 +1,5 @@
 
 # #**Step 2: Import All the Required Libraries**
-from langchain.document_loaders import PyPDFLoader, OnlinePDFLoader
-from langchain.vectorstores import Pinecone
-from sentence_transformers import SentenceTransformer
-from langchain.chains.question_answering import load_qa_chain
-import pinecone
 import os
 from langchain.schema import Document
 from getpass import getpass
