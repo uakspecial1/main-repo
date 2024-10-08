@@ -10,6 +10,34 @@ from langchain_community.vectorstores import Pinecone as LangChainPinecone
 from langchain.chains.question_answering import load_qa_chain
 from langchain.docstore.document import Document
 from sentence_transformers import SentenceTransformer
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+# Load environment variables
+load_dotenv()
+
+# Initialize Pinecone
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+
+# Check if the index exists and create if not
+index_name = os.getenv("PINECONE_INDEX_NAME")
+if index_name not in pc.list_indexes().names():
+    pc.create_index(
+        name=index_name,
+        dimension=384,
+        metric='cosine',
+        spec=ServerlessSpec(cloud='aws', region='us-east-1')
+    )
+
+# Load the index
+index = pc.Index(index_name)
+
+# FastAPI app initialization
+app = FastAPI()
+
+# Request model for querying
+class QueryRequest(BaseModel):
+    query_text: str
 
 # Function to read HTML files
 def read_html_file(file_path):
@@ -124,56 +152,6 @@ print(data1)
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=100)
 docs = text_splitter.split_documents(data1)
 
-# Load environment variables
-load_dotenv()
-
-# Initialize Pinecone
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
-
-# Check if the index exists and create if not
-index_name = os.getenv("PINECONE_INDEX_NAME")
-if index_name not in pc.list_indexes().names():
-    pc.create_index(
-        name=index_name,
-        dimension=384,
-        metric='cosine',
-        spec=ServerlessSpec(cloud='aws', region='us-east-1')
-    )
-
-# Load the index
-# Load the index
-index = pc.Index(index_name)  # Use Index instead of index
-
-
-# Querying the Pinecone index
-def query_index(query_text):
-    # Assuming the embeddings model is already loaded
-    embeddings_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-    
-    # Generate embeddings for the query
-    query_embedding = embeddings_model.encode(query_text).tolist()
-    
-    # Debug: Print the query embedding
-    print("Query Embedding:", query_embedding)
-    print("Embedding Length:", len(query_embedding))
-    
-    # Validate the query embedding length (ensure it's the correct dimension)
-    if len(query_embedding) != 384:
-        raise ValueError("Query embedding has an incorrect dimension.")
-    
-    # Query the Pinecone index
-    results = index.query(
-        vector=query_embedding,
-        top_k=5,
-        include_metadata=True  # Adjust based on your needs
-    )
-    return results
-
-# Example usage of querying the index
-query_text = "shiv ratri or shiv jayanti"
-results = query_index(query_text)
-print("Query Results:", results)
-
 # Upsert documents to Pinecone
 try:
     # Prepare the data for upsert
@@ -184,3 +162,46 @@ try:
     print("Upsert successful!")
 except Exception as e:
     print(f"Error during upsert: {e}")
+
+# Querying the Pinecone index locally
+def query_index(query_text):
+    embeddings_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+    
+    # Generate embeddings for the query
+    query_embedding = embeddings_model.encode(query_text).tolist()
+    
+    # Validate the query embedding length
+    if len(query_embedding) != 384:
+        raise ValueError("Query embedding has an incorrect dimension.")
+    
+    # Query the Pinecone index
+    results = index.query(
+        vector=query_embedding,
+        top_k=5,
+        include_metadata=True
+    )
+    
+    return results
+
+# Example usage of querying the index
+query_text = "shiv ratri or shiv jayanti"
+results = query_index(query_text)
+print("Query Results:", results)
+
+# FastAPI endpoint for querying
+@app.post("/query")
+async def query_endpoint(request: QueryRequest):
+    try:
+        results = query_index(request.query_text)
+        return {"status": "success", "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# FastAPI endpoint for uploading documents
+@app.post("/upload")
+async def upload_file(file_path: str):
+    try:
+        extracted_data, details = process_file(file_path)
+        return {"status": "success", "data": extracted_data, "details": details}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

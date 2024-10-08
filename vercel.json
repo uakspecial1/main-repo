@@ -1,12 +1,13 @@
 {
-    "version": 2,
-    
-    "routes": [
-      {
-        "src": "/(.*)",
-        "dest": "api/Spiritual_Chatbot_Model-Copy1.py"
-      }
-    ]
-  }
-  
+  "functions": {
+    "api/*.py": {
+      "runtime": "python3.9"
+    }
+  },
+  "routes": [
+    { 
+    "src": "/(.*)", 
+    "dest": "/api/mainBot.py" }
+  ]
+}
   
