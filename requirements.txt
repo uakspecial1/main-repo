@@ -6,6 +6,5 @@ pinecone-client
 beautifulsoup4
 fastapi
 bs4
-typing
 uvicorn
 
