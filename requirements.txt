@@ -1,8 +1,7 @@
-fastapi
-uvicorn
-python-dotenv
-pinecone-client
-beautifulsoup4
-langchain-community
-sentence-transformers
-pydantic
+langchain==0.0.119
+sentence-transformers==2.2.2
+pinecone-client==2.2.1
+beautifulsoup4==4.12.2
+fastapi==0.95.2
+uvicorn==0.21.1
+
