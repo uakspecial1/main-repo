@@ -133,7 +133,7 @@ def process_file(file_path):
         return result
     return "No data found."
 
-file_path = "murli.htm"
+file_path = "spiritualBot\api\murli.htm"
 extracted_data = process_file(file_path)
 
 data = extracted_data
