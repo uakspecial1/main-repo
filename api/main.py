@@ -386,11 +386,11 @@ async def search_similar_chunks(query: str):
 
         # Initialize Pinecone for vector search
         pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
-        docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="spiritual-bot-index")
+        docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="pinecone")
 
     except Exception as e:
         print(f"Error during processing: {e}")
-        
+
     docs = docsearch.similarity_search(query)
     if docs:
         results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
