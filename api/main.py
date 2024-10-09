@@ -143,8 +143,8 @@ current_dir = os.path.dirname(__file__)
 # Construct the path to the 'murli.htm' file
 file_path = os.path.join(current_dir, 'murli.htm')
 
-# Now you can open the file using this path
-with open(file_path, 'r') as file:
+# Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
+with open(file_path, 'r', encoding='ISO-8859-1') as file:
     content = file.read()
 
 
