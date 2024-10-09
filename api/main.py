@@ -348,9 +348,7 @@ def process_file(file_path):
 # Define your routes as usual
 @app.get("/search", response_model=List[dict])
 async def search_similar_chunks(query: str):
-    return [{"query":query}]
-    global docsearch
-
+   
     # Get the directory of the current script
     current_dir = os.path.dirname(__file__)
 
@@ -386,7 +384,7 @@ async def search_similar_chunks(query: str):
         docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="pinecone")
 
     except Exception as e:
-        print(f"Error during processing: {e}")
+        return[{"exception":Exception}]
 
     docs = docsearch.similarity_search(query)
     if docs:
