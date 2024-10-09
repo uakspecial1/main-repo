@@ -17,9 +17,17 @@ app = FastAPI()
 
 # Function to read HTML files
 def read_html_file(file_path):
+    if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
+        return []
+
     try:
         with open(file_path, 'r', encoding='windows-1252') as file:
             html_content = file.read()
+        if not html_content:  # Check if the file is empty
+            print(f"File is empty: {file_path}")
+            return []
+        
         soup = BeautifulSoup(html_content, 'html.parser')
         paragraphs = [p.get_text(strip=True) for p in soup.find_all('p')]
         cleaned_paragraphs = [p.replace('\xa0', ' ') for p in paragraphs]
@@ -27,6 +35,7 @@ def read_html_file(file_path):
     except UnicodeDecodeError as e:
         print(f"Error reading the file: {e}")
         return []
+
 
 # Function to clean and normalize text
 def clean_text(text_list):
@@ -60,13 +69,12 @@ def extract_date(text):
 
 # Improved function to extract the title by skipping unwanted phrases and using the first meaningful content
 def extract_title(paragraphs):
-    common_phrases = [
-        'Morning Murli', 'Om Shanti', 'BapDada', 'Madhuban',  # English phrases
-        'ओम शान्ति', 'अव्यक्त बापदादा', 'मधुबन'  # Hindi phrases
-    ]
+    if not paragraphs or all(p is None for p in paragraphs):
+        return "Title not found"
     
+    common_phrases = ['Morning Murli', 'Om Shanti', 'BapDada', 'Madhuban', 'ओम शान्ति', 'अव्यक्त बापदादा', 'मधुबन']
     meaningful_lines = []
-    
+
     for paragraph in paragraphs:
         clean_paragraph = paragraph.strip()
         if clean_paragraph and not any(phrase in clean_paragraph for phrase in common_phrases):
@@ -74,7 +82,6 @@ def extract_title(paragraphs):
 
     if meaningful_lines:
         title = meaningful_lines[0]
-        
         if re.match(r'\d{4}[-/.]\d{2}[-/.]\d{2}', title) or title in common_phrases:
             if len(meaningful_lines) > 1:
                 title = meaningful_lines[1]
@@ -83,6 +90,7 @@ def extract_title(paragraphs):
         return title
     else:
         return "Title not found"
+
 
 # General extraction function for structured content with improved pattern matching
 def extract_details(text):
@@ -107,6 +115,9 @@ def extract_details(text):
 # Function to process a file and extract relevant details based on file type
 def process_file(file_path):
     text_array = read_html_file(file_path)
+    if not text_array:  # Ensure the file has some content
+        return "No data found."
+
     cleaned_text_list = clean_text(text_array)
     
     date = "Date not found"
@@ -115,23 +126,20 @@ def process_file(file_path):
     if cleaned_text_list:
         date_line = remove_unwanted_text(cleaned_text_list[0])
         date = extract_date(date_line)
-    
         title = extract_title(cleaned_text_list)
-
         content = [line for line in cleaned_text_list[1:] if line != title] if title else cleaned_text_list[1:]
-
         details = extract_details("\n".join(content))
         details["Date"] = date
         details["Title"] = title
         details["Content"] = "\n".join(content)  # Join content as a single string
 
-        # Format the output as a string
         result = f"Date: {details['Date']}\nTitle: {details['Title']}\nContent:\n{details['Content']}\n"
         result += f"Essence: {details['Essence']}\nQuestion: {details['Question']}\nAnswer: {details['Answer']}\n"
         result += f"Essence for Dharna: {details['Essence for Dharna']}\nBlessing: {details['Blessing']}\nSlogan: {details['Slogan']}\n"
     
         return result
     return "No data found."
+
 
 # file_path = "spiritualBot/api/murli.htm"
 
@@ -173,7 +181,11 @@ os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY") or getpass(
 
 embeddings = PineconeEmbeddings(model="multilingual-e5-large") #1024 dimensions.
 
-docs = [str(doc) for doc in docs]  # Convert each doc to string if needed
+docs = [str(doc) for doc in docs if doc]  # Ensure non-empty strings
+
+if not docs:
+    raise ValueError("No valid documents to embed.")
+
 
 doc_embeds = embeddings.embed_documents(docs)
 
