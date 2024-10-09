@@ -384,21 +384,14 @@ def load_documents_and_embeddings():
     except Exception as e:
         print(f"Error during processing: {e}")
 
-@app.get("/search", response_model=List[dict])  # Change to GET and dict for response
+@app.on_event("startup")
+async def startup_event():
+    load_documents_and_embeddings()
+
+@app.get("/search", response_model=List[dict])
 async def search_similar_chunks(query: str = Query(...)):
-    # Load documents and embeddings if not already done
-    if docsearch is None:
-        load_documents_and_embeddings()
-
-    if docsearch is not None:
-        docs = docsearch.similarity_search(query)
-    else:
-        return [{"docsearch": "Not found."}]
+    if not docsearch:
+        return [{"error": "Document search not initialized."}]
     
-
-    if docs:
-        results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
-
-        return results
-    else:
-        return [{"chunk": "No results found."}]
+    docs = docsearch.similarity_search(query)
+    return [{"chunk": doc.page_content} for doc in docs[:10]] if docs else [{"chunk": "No results found."}]
