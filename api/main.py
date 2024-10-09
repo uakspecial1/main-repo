@@ -373,5 +373,19 @@ try:
     os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY") or getpass("Enter your Pinecone API key: ")
 
     embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
+
+    # Initialize Pinecone for vector search
+    pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
+    docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="spiritual-bot-index")
+
 except Exception as e:
     print(f"Error during processing: {e}")
+
+@app.get("/search", response_model=List[dict])  # Change to GET and dict for response
+async def search_similar_chunks(query: str = Query(...)):
+    docs = docsearch.similarity_search(query)
+    if docs:
+        results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
+        return results
+    else:
+        return [{"chunk": "No results found."}]
