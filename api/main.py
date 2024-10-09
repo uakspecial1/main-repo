@@ -344,49 +344,56 @@ def process_file(file_path):
         return result
     return "No data found."
 
-# Get the directory of the current script
-current_dir = os.path.dirname(__file__)
+def load_documents_and_embeddings():
+    global docsearch
 
-# Construct the path to the 'murli.htm' file
-file_path = os.path.join(current_dir, 'murli.htm')
+    # Get the directory of the current script
+    current_dir = os.path.dirname(__file__)
 
-# Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
-try:
-    with open(file_path, 'r', encoding='ISO-8859-1') as file:
-        content = file.read()
+    # Construct the path to the 'murli.htm' file
+    file_path = os.path.join(current_dir, 'murli.htm')
 
-    extracted_data = process_file(file_path)
+    # Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
+    try:
+        with open(file_path, 'r', encoding='ISO-8859-1') as file:
+            content = file.read()
 
-    data = extracted_data
+        extracted_data = process_file(file_path)
 
-    # Split the Text into Chunks
-    if data is None:
-        raise ValueError("No data extracted; 'data' is None.")
-    
-    data1 = [Document(page_content=data)]
+        data = extracted_data
 
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0, separators=["\n", "\n\n", "."])
+        # Split the Text into Chunks
+        if data is None:
+            raise ValueError("No data extracted; 'data' is None.")
 
-    docs = text_splitter.split_documents(data1)
+        data1 = [Document(page_content=data)]
 
-    # Download the Embeddings
-    os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY") or getpass("Enter your Pinecone API key: ")
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0, separators=["\n", "\n\n", "."])
 
-    embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
+        docs = text_splitter.split_documents(data1)
 
-    # Initialize Pinecone for vector search
-    pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
-    docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="spiritual-bot-index")
+        # Download the Embeddings
+        os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY") or getpass("Enter your Pinecone API key: ")
 
-except Exception as e:
-    print(f"Error during processing: {e}")
+        embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
+
+        # Initialize Pinecone for vector search
+        pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
+        docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="spiritual-bot-index")
+
+    except Exception as e:
+        print(f"Error during processing: {e}")
 
 @app.get("/search", response_model=List[dict])  # Change to GET and dict for response
 async def search_similar_chunks(query: str = Query(...)):
+    # Load documents and embeddings if not already done
+    if docsearch is None:
+        load_documents_and_embeddings()
+
     docs = docsearch.similarity_search(query)
-    print("hello")
     if docs:
         results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
+
         return results
     else:
         return [{"chunk": "No results found."}]
