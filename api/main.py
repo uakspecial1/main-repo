@@ -323,6 +323,17 @@ if index_name not in pc.list_indexes().names():
 with pc.index(index_name=index_name) as index:
     index.upsert(vectors=zip(range(len(doc_embeds)), doc_embeds))
 
+   # Function to process a file and extract relevant details based on file type
+def process_file(file_path):
+    
+    text_array = read_html_file(file_path)
+    if not text_array:  # Ensure the file has some content
+        return "No data found."
+
+    cleaned_text_list = clean_text(text_array)
+    
+    date = "Date not found"
+    title = "Title not found"
     
     if cleaned_text_list:
         date_line = remove_unwanted_text(cleaned_text_list[0])
@@ -339,7 +350,9 @@ with pc.index(index_name=index_name) as index:
         result += f"Essence for Dharna: {details['Essence for Dharna']}\nBlessing: {details['Blessing']}\nSlogan: {details['Slogan']}\n"
     
         return result
+
     return "No data found."
+
 
 
 # file_path = "spiritualBot/api/murli.htm"
