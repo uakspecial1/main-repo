@@ -344,7 +344,14 @@ def process_file(file_path):
         return result
     return "No data found."
 
-def load_documents_and_embeddings():
+
+
+
+
+
+# Define your routes as usual
+@app.get("/search", response_model=List[dict])
+async def search_similar_chunks(query: str):
     global docsearch
 
     # Get the directory of the current script
@@ -383,35 +390,7 @@ def load_documents_and_embeddings():
 
     except Exception as e:
         print(f"Error during processing: {e}")
-
-
-from contextlib import asynccontextmanager
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Code to run during startup (e.g., loading documents or embeddings)
-    print("App starting up...")
-
-    # Perform your startup logic here
-    load_documents_and_embeddings()
-
-    yield  # The point where the app starts running
-
-    # Code to run during shutdown
-    print("App shutting down...")
-
-    # Perform your shutdown logic here (e.g., clean up resources)
-    # Optionally, close or clean up resources here.
-
-# Apply the lifespan handler to your FastAPI app
-app = FastAPI(lifespan=lifespan)
-
-# Define your routes as usual
-@app.get("/search", response_model=List[dict])
-async def search_similar_chunks(query: str):
-    if docsearch is None:
-        load_documents_and_embeddings()
-
+        
     docs = docsearch.similarity_search(query)
     if docs:
         results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
