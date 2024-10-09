@@ -349,8 +349,6 @@ def process_file(file_path):
 @app.get("/search", response_model=List[dict])
 async def search_similar_chunks(query: str):
    
-   
-
     # Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
     try:
          # Get the directory of the current script
@@ -358,7 +356,7 @@ async def search_similar_chunks(query: str):
 
     # Construct the path to the 'murli.htm' file
         file_path = os.path.join(current_dir, 'murli.htm')
-        
+
         with open(file_path, 'r', encoding='ISO-8859-1') as file:
             content = file.read()
 
@@ -386,7 +384,7 @@ async def search_similar_chunks(query: str):
         docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="pinecone")
 
     except Exception as e:
-        return[{"exception":Exception}]
+        return[{"exception":e}]
 
     docs = docsearch.similarity_search(query)
     if docs:
