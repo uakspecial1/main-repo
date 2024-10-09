@@ -390,7 +390,12 @@ async def search_similar_chunks(query: str = Query(...)):
     if docsearch is None:
         load_documents_and_embeddings()
 
-    docs = docsearch.similarity_search(query)
+    if docsearch is not None:
+        docs = docsearch.similarity_search(query)
+    else:
+         return [{"docsearch": "Not found."}]
+    
+
     if docs:
         results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
 
