@@ -384,6 +384,7 @@ except Exception as e:
 @app.get("/search", response_model=List[dict])  # Change to GET and dict for response
 async def search_similar_chunks(query: str = Query(...)):
     docs = docsearch.similarity_search(query)
+    print("hello")
     if docs:
         results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
         return results
