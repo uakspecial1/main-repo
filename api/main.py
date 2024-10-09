@@ -384,7 +384,7 @@ async def search_similar_chunks(query: str):
         docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="pinecone")
 
     except Exception as e:
-        return[{"exception":e}]
+        return[{"exception":"hii"}]
 
     docs = docsearch.similarity_search(query)
     if docs:
