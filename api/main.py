@@ -349,14 +349,16 @@ def process_file(file_path):
 @app.get("/search", response_model=List[dict])
 async def search_similar_chunks(query: str):
    
-    # Get the directory of the current script
-    current_dir = os.path.dirname(__file__)
-
-    # Construct the path to the 'murli.htm' file
-    file_path = os.path.join(current_dir, 'murli.htm')
+   
 
     # Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
     try:
+         # Get the directory of the current script
+        current_dir = os.path.dirname(__file__)
+
+    # Construct the path to the 'murli.htm' file
+        file_path = os.path.join(current_dir, 'murli.htm')
+        
         with open(file_path, 'r', encoding='ISO-8859-1') as file:
             content = file.read()
 
