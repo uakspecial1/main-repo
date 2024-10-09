@@ -209,6 +209,7 @@ import re
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, Query
 from typing import List
+import traceback
 
 app = FastAPI()
 docsearch = None 
@@ -383,12 +384,11 @@ async def search_similar_chunks(query: str):
         Pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
         docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="pinecone")
 
-   
+  
 
     # some code that may throw an exception
     except Exception as e:
-        print(f"Exception occurred: {e}")  # prints the exception
-        return [{"exception": str(e)}]
+        return [{"exception": str(e), "trace": traceback.format_exc()}]
 
 
     docs = docsearch.similarity_search(query)
