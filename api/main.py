@@ -376,7 +376,11 @@ async def search_similar_chunks(query: str):
         docs = text_splitter.split_documents(data1)
 
         # Download the Embeddings
-        os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY") or getpass("Enter your Pinecone API key: ")
+        PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+        if not PINECONE_API_KEY:
+            raise EnvironmentError("PINECONE_API_KEY not found. Please set it in your environment variables.")
+        else:
+             os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
         embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
 
