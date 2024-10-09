@@ -393,7 +393,7 @@ async def search_similar_chunks(query: str = Query(...)):
     if docsearch is not None:
         docs = docsearch.similarity_search(query)
     else:
-         return [{"docsearch": "Not found."}]
+        return [{"docsearch": "Not found."}]
     
 
     if docs:
