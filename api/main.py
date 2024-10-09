@@ -381,7 +381,7 @@ try:
 except Exception as e:
     print(f"Error during processing: {e}")
 
-@app.get("/search", response_model=List[dict])  # Change to GET and dict for response
+@app.get("/", response_model=List[dict])  # Change to GET and dict for response
 async def search_similar_chunks(query: str = Query(...)):
     docs = docsearch.similarity_search(query)
     if docs:
