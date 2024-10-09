@@ -133,7 +133,22 @@ def process_file(file_path):
         return result
     return "No data found."
 
-file_path = "spiritualBot/api/murli.htm"
+# file_path = "spiritualBot/api/murli.htm"
+
+import os
+
+# Get the directory of the current script
+current_dir = os.path.dirname(__file__)
+
+# Construct the path to the 'murli.htm' file
+file_path = os.path.join(current_dir, 'murli.htm')
+
+# Now you can open the file using this path
+with open(file_path, 'r') as file:
+    content = file.read()
+
+
+
 extracted_data = process_file(file_path)
 
 data = extracted_data
