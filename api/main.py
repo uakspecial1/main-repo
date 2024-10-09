@@ -384,14 +384,37 @@ def load_documents_and_embeddings():
     except Exception as e:
         print(f"Error during processing: {e}")
 
-@app.on_event("startup")
-async def startup_event():
+
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Code to run during startup (e.g., loading documents or embeddings)
+    print("App starting up...")
+
+    # Perform your startup logic here
     load_documents_and_embeddings()
 
+    yield  # The point where the app starts running
+
+    # Code to run during shutdown
+    print("App shutting down...")
+
+    # Perform your shutdown logic here (e.g., clean up resources)
+    # Optionally, close or clean up resources here.
+
+# Apply the lifespan handler to your FastAPI app
+app = FastAPI(lifespan=lifespan)
+
+# Define your routes as usual
 @app.get("/search", response_model=List[dict])
-async def search_similar_chunks(query: str = Query(...)):
-    if not docsearch:
-        return [{"error": "Document search not initialized."}]
-    
+async def search_similar_chunks(query: str):
+    if docsearch is None:
+        load_documents_and_embeddings()
+
     docs = docsearch.similarity_search(query)
-    return [{"chunk": doc.page_content} for doc in docs[:10]] if docs else [{"chunk": "No results found."}]
+    if docs:
+        results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
+        return results
+    else:
+        return [{"chunk": "No results found."}]
