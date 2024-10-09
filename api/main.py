@@ -210,6 +210,7 @@ from bs4 import BeautifulSoup
 from fastapi import FastAPI, Query
 from typing import List
 import traceback
+from dotenv import load_dotenv
 
 app = FastAPI()
 docsearch = None 
