@@ -11,8 +11,5 @@
           "src": "/(.*)",            
           "dest": "api/main.py"
       }
-  ],
-  "files": [
-    "spiritualBot/api/murli.htm"
   ]
 }
