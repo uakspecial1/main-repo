@@ -211,7 +211,7 @@ from fastapi import FastAPI, Query
 from typing import List
 
 app = FastAPI()
-
+docsearch = None 
 # Load the Data
 
 # Function to read HTML files
