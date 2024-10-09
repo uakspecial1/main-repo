@@ -345,7 +345,7 @@ def process_file(file_path):
     return "No data found."
 
 # Get the directory of the current script
-current_dir = os.path.dirname(_file_)
+current_dir = os.path.dirname(__file__)
 
 # Construct the path to the 'murli.htm' file
 file_path = os.path.join(current_dir, 'murli.htm')
