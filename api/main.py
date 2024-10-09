@@ -345,13 +345,10 @@ def process_file(file_path):
     return "No data found."
 
 
-
-
-
-
 # Define your routes as usual
 @app.get("/search", response_model=List[dict])
 async def search_similar_chunks(query: str):
+    return [{"query":query}]
     global docsearch
 
     # Get the directory of the current script
