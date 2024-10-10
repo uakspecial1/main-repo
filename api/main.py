@@ -212,9 +212,14 @@ from typing import List
 import traceback
 from dotenv import load_dotenv
 
+
 app = FastAPI()
+
+# Load environment variables
+load_dotenv()
+
 docsearch = None 
-# Load the Data
+
 
 # Function to read HTML files
 def read_html_file(file_path):
@@ -278,17 +283,24 @@ def extract_title(paragraphs):
     common_phrases = ['Morning Murli', 'Om Shanti', 'BapDada', 'Madhuban', 'ओम शान्ति', 'अव्यक्त बापदादा', 'मधुबन']
     meaningful_lines = []
 
+    # Filter paragraphs that don't contain common phrases
     for paragraph in paragraphs:
         clean_paragraph = paragraph.strip()
         if clean_paragraph and not any(phrase in clean_paragraph for phrase in common_phrases):
             meaningful_lines.append(clean_paragraph)
 
+    # Try to find a meaningful title
     if meaningful_lines:
         title = meaningful_lines[0]
+        
+        # If the first meaningful line is a date or common phrase, skip it
         if re.match(r'\d{4}[-/.]\d{2}[-/.]\d{2}', title) or title in common_phrases:
             title = meaningful_lines[1] if len(meaningful_lines) > 1 else "Title not found"
+        
         return title
+
     return "Title not found"
+
 
 # General extraction function for structured content with improved pattern matching
 def extract_details(text):
@@ -346,59 +358,53 @@ def process_file(file_path):
         return result
     return "No data found."
 
-
-# Define your routes as usual
-@app.get("/search", response_model=List[dict])
-async def search_similar_chunks(query: str):
-   
-    # Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
-    try:
-         # Get the directory of the current script
-        current_dir = os.path.dirname(__file__)
+ # Get the directory of the current script
+current_dir = os.path.dirname(__file__)
 
     # Construct the path to the 'murli.htm' file
-        file_path = os.path.join(current_dir, 'murli.htm')
+file_path = os.path.join(current_dir, 'murli.htm')
 
-        with open(file_path, 'r', encoding='ISO-8859-1') as file:
-            content = file.read()
+# Specify the correct encoding (try 'ISO-8859-1' or 'cp1252' if unsure)
+try:
+    extracted_data = process_file(file_path)
 
-        extracted_data = process_file(file_path)
+    data = extracted_data
 
-        data = extracted_data
+    # Split the Text into Chunks
+    if data is None:
+        raise ValueError("No data extracted; 'data' is None.")
+    
+    data1 = [Document(page_content=data)]
 
-        # Split the Text into Chunks
-        if data is None:
-            raise ValueError("No data extracted; 'data' is None.")
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0, separators=["\n", "\n\n", "."])
 
-        data1 = [Document(page_content=data)]
+    docs = text_splitter.split_documents(data1)
 
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0, separators=["\n", "\n\n", "."])
+    # Download the Embeddings
+    os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY") or getpass("Enter your Pinecone API key: ")
 
-        docs = text_splitter.split_documents(data1)
+    embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
 
-        # Download the Embeddings
-        PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-        if not PINECONE_API_KEY:
-            raise EnvironmentError("PINECONE_API_KEY not found. Please set it in your environment variables.")
+    # Initialize Pinecone for vector search
+    pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
+    docsearch = LangChainPinecone.from_texts(docs, embeddings, index_name="spiritual-bot-index")
+
+except Exception as e:
+    print(f"Error during processing: {e}")
+    traceback.print_exc()
+
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the Spiritual Chatbot API!"}
+
+@app.get("/search", response_model=List[dict])  # Change to GET and dict for response
+async def search_similar_chunks(query: str = Query(...)):
+    try:
+        docs = docsearch.similarity_search(query)
+        if docs:
+            results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
+            return results
         else:
-             os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-
-        embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
-
-        # Initialize Pinecone for vector search
-        Pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
-        docsearch = LangChainPinecone.from_texts(data1, embeddings, index_name="pinecone")
-
-  
-
-    # some code that may throw an exception
+            return [{"chunk": "No results found."}]
     except Exception as e:
-        return [{"exception": str(e), "trace": traceback.format_exc()}]
-
-
-    docs = docsearch.similarity_search(query)
-    if docs:
-        results = [{"chunk": docs[i].page_content} for i in range(min(10, len(docs)))]
-        return results
-    else:
-        return [{"chunk": "No results found."}]
+        return [{"error": str(e)}]
