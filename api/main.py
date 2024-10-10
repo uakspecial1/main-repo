@@ -211,6 +211,7 @@
 #             return [{"chunk": "No results found."}]
 #     except Exception as e:
 #         return [{"error": str(e)}]
+
 # Step 2: Import All the Required Libraries
 import os
 import re
@@ -242,7 +243,7 @@ def read_html_file(file_path):
     try:
         with open(file_path, 'r', encoding='windows-1252') as file:
             html_content = file.read()
-        if not html_content:  # Check if the file is empty
+        if not html_content:
             print(f"File is empty: {file_path}")
             return []
         
@@ -258,8 +259,8 @@ def read_html_file(file_path):
 def clean_text(text_list):
     cleaned_list = []
     for text in text_list:
-        text = re.sub(r'\s+', ' ', text).strip()  # Replace multiple spaces with a single space
-        text = text.replace('\n', ' ').replace('\t', '')  # Remove newlines and tabs
+        text = re.sub(r'\s+', ' ', text).strip()
+        text = text.replace('\n', ' ').replace('\t', '')
         cleaned_list.append(text)
     return cleaned_list
 
@@ -273,10 +274,10 @@ def remove_unwanted_text(text):
 # Function to extract the date
 def extract_date(text):
     date_patterns = [
-        r'\b\d{2}[-/.]\d{2}[-/.]\d{4}\b',  
-        r'\b\d{2}[-/.]\d{2}[-/.]\d{2}\b',  
-        r'\b\d{4}[-/.]\d{2}[-/.]\d{2}\b',  
-        r'\b\d{2}\.\d{2}\.\d{4}\b',        
+        r'\b\d{2}[-/.]\d{2}[-/.]\d{4}\b',
+        r'\b\d{2}[-/.]\d{2}[-/.]\d{2}\b',
+        r'\b\d{4}[-/.]\d{2}[-/.]\d{2}\b',
+        r'\b\d{2}\.\d{2}\.\d{4}\b',
     ]
     for pattern in date_patterns:
         date_match = re.search(pattern, text)
@@ -286,7 +287,7 @@ def extract_date(text):
 
 # Function to extract the title
 def extract_title(paragraphs):
-    common_phrases = ['Morning Murli', 'Om Shanti', 'BapDada', 'Madhuban', 'ओम शान्ति', 'अव्यक्त बापदादा', 'मधुबन']
+    common_phrases = ['Morning Murli', 'Om Shanti', 'BapDada', 'Madhuban']
     meaningful_lines = [p for p in paragraphs if p and not any(phrase in p for phrase in common_phrases)]
     
     if meaningful_lines:
@@ -344,6 +345,9 @@ file_path = os.path.join(current_dir, 'murli.htm')
 try:
     extracted_data = process_file(file_path)
     
+    # Log extracted data for debugging
+    print(f"Extracted Data: {extracted_data}")
+
     if isinstance(extracted_data, str) or not extracted_data:
         raise ValueError("No valid data extracted.")
 
@@ -361,6 +365,9 @@ try:
     Pinecone.init(api_key=api_key, environment="us-east-1")
     embeddings = PineconeEmbeddings()
     docsearch = LangChainPinecone.from_texts(docs, embeddings, index_name="pinecone")
+
+    # Log successful initialization
+    print("Document search initialized successfully.")
 
 except Exception as e:
     print(f"Error during processing: {e}")
