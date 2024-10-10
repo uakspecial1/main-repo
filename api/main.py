@@ -113,6 +113,7 @@ def extract_details(text):
 
 # Function to process a file and extract relevant details based on file type
 def process_file(file_path):
+    
     text_array = read_html_file(file_path)
     if not text_array:  # Ensure the file has some content
         return "No data found."
@@ -167,8 +168,9 @@ async def search_similar_chunks(query: str):
             content = file.read()
 
         extracted_data = process_file(file_path)
-
+        
         data = extracted_data
+        print(data)
 
         # Split the Text into Chunks
         if data is None:
