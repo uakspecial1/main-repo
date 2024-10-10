@@ -219,7 +219,7 @@ from fastapi import FastAPI, Query, HTTPException
 from langchain.schema import Document
 from langchain.vectorstores import Pinecone as LangChainPinecone
 from langchain_pinecone import PineconeEmbeddings
-from pinecone import Pinecone, ServerlessSpec
+from pinecone import Pinecone
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
@@ -263,14 +263,14 @@ def clean_text(text_list):
         cleaned_list.append(text)
     return cleaned_list
 
-# Remove unwanted text patterns
+# Function to remove unwanted text patterns
 def remove_unwanted_text(text):
     unwanted_patterns = [r'ओम शान्ति', r'अव्यक्त बापदादा', r'मधुबन']
     for pattern in unwanted_patterns:
         text = re.sub(pattern, '', text)
     return text.strip()
 
-# Enhanced function to extract the date
+# Function to extract the date
 def extract_date(text):
     date_patterns = [
         r'\b\d{2}[-/.]\d{2}[-/.]\d{4}\b',  
@@ -284,7 +284,7 @@ def extract_date(text):
             return date_match.group()
     return "Date not found"
 
-# Improved function to extract the title
+# Function to extract the title
 def extract_title(paragraphs):
     common_phrases = ['Morning Murli', 'Om Shanti', 'BapDada', 'Madhuban', 'ओम शान्ति', 'अव्यक्त बापदादा', 'मधुबन']
     meaningful_lines = [p for p in paragraphs if p and not any(phrase in p for phrase in common_phrases)]
@@ -335,31 +335,31 @@ def process_file(file_path):
     return details
 
 # Get the directory of the current script
-current_dir = os.path.dirname(__file__)
+current_dir = os.path.dirname(_file_)
 
 # Construct the path to the 'murli.htm' file
 file_path = os.path.join(current_dir, 'murli.htm')
 
-# Specify the correct encoding
+# Specify the correct encoding and initialize docsearch
 try:
     extracted_data = process_file(file_path)
     
-    if not extracted_data or isinstance(extracted_data, str):
+    if isinstance(extracted_data, str) or not extracted_data:
         raise ValueError("No valid data extracted.")
 
-    data = extracted_data['Content']  # Use the content as input for the vector store
-
-    # Split the Text into Chunks
+    # Prepare data for the vector store
+    data = extracted_data['Content']
     data1 = [Document(page_content=data)]
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=0, separators=["\n", "\n\n", "."])
     docs = text_splitter.split_documents(data1)
 
-    # Download the Embeddings
-    os.environ["PINECONE_API_KEY"] = os.getenv("PINECONE_API_KEY")
-    embeddings = PineconeEmbeddings()
-
     # Initialize Pinecone for vector search
-    Pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
+    api_key = os.getenv("PINECONE_API_KEY")
+    if not api_key:
+        raise ValueError("Pinecone API key not found.")
+    
+    Pinecone.init(api_key=api_key, environment="us-east-1")
+    embeddings = PineconeEmbeddings()
     docsearch = LangChainPinecone.from_texts(docs, embeddings, index_name="pinecone")
 
 except Exception as e:
