@@ -386,7 +386,7 @@ try:
     embeddings = PineconeEmbeddings()  # Ensure this is correctly initialized based on your setup
 
     # Initialize Pinecone for vector search
-    pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
+    Pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
     docsearch = LangChainPinecone.from_texts(docs, embeddings, index_name="spiritual-bot-index")
 
 except Exception as e:
