@@ -387,7 +387,7 @@ try:
 
     # Initialize Pinecone for vector search
     Pinecone.init(api_key=os.getenv("PINECONE_API_KEY"), environment="us-east-1")
-    docsearch = LangChainPinecone.from_texts(docs, embeddings, index_name="spiritual-bot-index")
+    docsearch = LangChainPinecone.from_texts(docs, embeddings, index_name="pinecone")
 
 except Exception as e:
     print(f"Error during processing: {e}")
