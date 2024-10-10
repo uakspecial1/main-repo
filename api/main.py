@@ -131,8 +131,12 @@ def process_file(file_path):
         return result
     return "No data found."
 
-# Example usage
-file_path = r"C:\Users\Utkar\Downloads\Spiritual Bot\spiritualBot\api\murli.htm"
+# # Get the directory of the current script
+current_dir = os.path.dirname(__file__)
+
+# Construct the path to the 'murli.htm' file
+file_path = os.path.join(current_dir, 'murli.htm')
+
 extracted_data = process_file(file_path)
 
 data = extracted_data
