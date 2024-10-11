@@ -70,10 +70,13 @@ initialize_pinecone()
 #     print(f"Title: {chunk['metadata'].get('title', 'N/A')}")
 #     print(f"Text: {chunk['metadata'].get('text', 'N/A')}\n")
 
+@app.get("/")
+def ret():
+    return {"Hello": "World"}
 
 @app.get("/query")
 async def query_pinecone():
-    query = "Eastern Zones"
+    query = "what is love?"
 
     # Use the Pinecone index for embedding
     embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
