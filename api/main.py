@@ -74,9 +74,8 @@ initialize_pinecone()
 def ret():
     return {"Hello": "World"}
 
-@app.get("/query")
-async def query_pinecone():
-    query = "what is love?"
+@app.get("/query/{query}")
+async def query_pinecone(query: str):
 
     # Use the Pinecone index for embedding
     embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
