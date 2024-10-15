@@ -1,6 +1,5 @@
 name: Deploy FastAPI to Vercel
 
-# Trigger this workflow when pushing code to the 'main' branch
 on:
   push:
     branches:
@@ -11,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository code (updated to v3)
+      # Step 1: Checkout the repository code
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3  # Updated to v3
 
-      # Step 2: Set up Python environment (updated to v3)
+      # Step 2: Set up Python environment
       - name: Set up Python 3.9
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v3  # Updated to v3
         with:
           python-version: '3.9'
 
@@ -27,11 +26,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 4: Install Vercel CLI
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      # Step 5: Deploy to Vercel
+      # Step 4: Deploy to Vercel
       - name: Deploy to Vercel
         run: vercel --prod
         env:
