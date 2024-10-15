@@ -1,10 +1,5 @@
 
 
-# get_ipython().system('pip install langchain')
-# get_ipython().system('pip install pinecone-client')
-# get_ipython().system('pip install llama-cpp-python')
-# get_ipython().system('pip install pinecone')
-
 #Imports and Configuration
 import os
 import re
