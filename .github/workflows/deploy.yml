@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+<<<<<<< HEAD
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -17,10 +18,22 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: '14'  # You can specify any Node.js version as required
+=======
+      # Step 1: Checkout the repository code
+      - name: Checkout code
+        uses: actions/checkout@v3  # Updated to v3
+
+      # Step 2: Set up Python environment
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v3  # Updated to v3
+        with:
+          python-version: '3.9'
+>>>>>>> c8bb413c67694ff2cf115122f42c4a8619f1daa3
 
     - name: Install dependencies
       run: npm install
 
+<<<<<<< HEAD
     - name: Install Vercel CLI
       run: npm install -g vercel  # This step installs the Vercel CLI globally
 
@@ -28,3 +41,10 @@ jobs:
       run: vercel --prod
       env:
         VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}  # Make sure you've added this secret to GitHub
+=======
+      # Step 4: Deploy to Vercel
+      - name: Deploy to Vercel
+        run: vercel --prod
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+>>>>>>> c8bb413c67694ff2cf115122f42c4a8619f1daa3
