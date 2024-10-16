@@ -3,7 +3,7 @@ name: Deploy to Vercel
 on:
   push:
     branches:
-      - main  # Replace with the branch you want to deploy
+      - main  # Trigger deployment on push to the main branch
 
 jobs:
   deploy:
@@ -12,16 +12,20 @@ jobs:
     steps:
       # Step 1: Checkout the repository code
       - name: Checkout code
-        uses: actions/checkout@v3  # Use the latest version (v3)
+        uses: actions/checkout@v3  # Use the latest version
 
       # Step 2: Set up Python environment
       - name: Set up Python 3.9
-        uses: actions/setup-python@v3  # Use the latest version (v3)
+        uses: actions/setup-python@v3  # Use the latest version
         with:
           python-version: '3.9'
 
-      # Step 3: Deploy to Vercel
+      # Step 3: Install Vercel CLI
+      - name: Install Vercel CLI
+        run: npm install -g vercel  # Install the Vercel CLI globally
+
+      # Step 4: Deploy to Vercel
       - name: Deploy to Vercel
         run: vercel --prod
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}  # Your Vercel token stored in GitHub Secrets
