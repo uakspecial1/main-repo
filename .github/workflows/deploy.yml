@@ -20,13 +20,18 @@ jobs:
         with:
           python-version: '3.9'
 
-      # Step 3: Install Vercel CLI
+      # Step 3: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'  # Match Vercel's Node.js version
+
+      # Step 4: Install Vercel CLI
       - name: Install Vercel CLI
         run: npm install -g vercel  # Install the Vercel CLI globally
 
-      # Step 4: Deploy to Vercel
+      # Step 5: Deploy to Vercel
       - name: Deploy to Vercel
         run: vercel --prod
         env:
-             VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}
-
+          VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}
