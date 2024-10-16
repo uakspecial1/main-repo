@@ -28,4 +28,4 @@ jobs:
       - name: Deploy to Vercel
         run: vercel --prod
         env:
-          VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}  # Use the Vercel token from GitHub Secrets
+            VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}
