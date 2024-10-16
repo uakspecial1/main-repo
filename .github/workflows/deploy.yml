@@ -24,8 +24,14 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel  # Install the Vercel CLI globally
 
-      # Step 4: Deploy to Vercel
+      # Step 4: Debug Vercel Token (optional)
+      - name: Debug Vercel Token
+        run: echo "VERCEL_TOKEN is set."
+        env:
+          VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}
+
+      # Step 5: Deploy to Vercel
       - name: Deploy to Vercel
         run: vercel --prod
         env:
-            VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}  # Use the Vercel token from GitHub Secrets
