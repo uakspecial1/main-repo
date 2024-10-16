@@ -14,22 +14,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3  # Use the latest version
 
-      # Step 2: Set up Node.js environment
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
+      # Step 2: Set up Python environment
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v3  # Use the latest version
         with:
-          node-version: '18.x'  # Use Node.js version 18.x
+          python-version: '3.9'
 
-      # Step 3: Install dependencies
-      - name: Install Node Modules
-        run: npm install  # Install dependencies defined in package.json
+      # Step 3: Install Vercel CLI
+      - name: Install Vercel CLI
+        run: npm install -g vercel  # Install the Vercel CLI globally
 
-      # Step 4: Set Vercel environment variables
-      - name: Set Vercel Environment Variables
-        run: echo "VERCEL_TOKEN=${{ secrets.NEW_VERCEL_TOKEN }}" >> $GITHUB_ENV
-
-      # Step 5: Deploy to Vercel
-      - name: Deploy Project using Vercel
+      # Step 4: Deploy to Vercel
+      - name: Deploy to Vercel
         run: vercel --prod
         env:
-          VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.NEW_VERCEL_TOKEN }}  # Use the Vercel token from GitHub Secrets
