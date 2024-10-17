@@ -69,7 +69,7 @@ initialize_pinecone()
 def ret():
     return {"Hello": "World"}
 
-@app.get("/query/{query}")
+@app.get("/{query}")
 async def query_pinecone(query: str):
 
     # Use the Pinecone index for embedding
