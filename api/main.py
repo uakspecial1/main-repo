@@ -1,13 +1,13 @@
 # Imports and Configuration
 import os
 import re
-from langchain.vectorstores import Pinecone 
+from langchain_community.vectorstores import Pinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
 import requests
 from dotenv import load_dotenv
-
+from aiohttp import ClientSession
 load_dotenv()
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -81,22 +81,25 @@ async def receive_message(request: Request):
     
 # Function to send message back to WhatsApp user
 async def send_message(recipient_id, text):
+    url = f"https://graph.facebook.com/v13.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}"
     }
     data = {
         "messaging_product": "whatsapp",
-        "to": recipient_id,  # Dynamically use recipient_id here
-        "text": { "body": text }
+        "to": recipient_id,
+        "text": {"body": text}
     }
-    url = f"https://graph.facebook.com/v13.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"  # Use phone number ID from env
-    response = requests.post(
-        url,
-        headers=headers,
-        json=data
-    )
-    response.raise_for_status()
+
+    # Use aiohttp.ClientSession to send the request asynchronously
+    async with ClientSession() as session:
+        try:
+            async with session.post(url, headers=headers, json=data) as response:
+                response.raise_for_status()  # Raise an error for bad status codes
+                logging.debug("Message sent successfully")
+        except Exception as e:
+            logging.error("Failed to send message: %s", e)
 
 # Your existing Pinecone query endpoint
 @app.get("/{query}")
