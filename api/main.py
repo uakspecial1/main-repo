@@ -1,33 +1,31 @@
-# Imports and Configuration
+
+
+#Imports and Configuration
 import os
 import re
-from langchain_community.vectorstores import Pinecone
+from langchain.vectorstores import Pinecone as LangChainPinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
-import requests
-from dotenv import load_dotenv
-from aiohttp import ClientSession
-load_dotenv()
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
-from fastapi import FastAPI, Request
-from fastapi.responses import PlainTextResponse
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from fastapi import FastAPI
 
 app = FastAPI()
 
 # Configuration
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_API_ENV = os.getenv("PINECONE_API_ENV")
+PINECONE_API_KEY = '1f5403e4-2faa-481a-814d-19b3204261a8'
+PINECONE_API_ENV = 'us-east-1'
 INDEX_NAME = "pinecone"
-VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
-WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID")
-WHATSAPP_ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN")
+
 
 # Set up Pinecone
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+
 
 # Pinecone Initialization
 def initialize_pinecone():
@@ -40,88 +38,73 @@ def initialize_pinecone():
         )
     return PineconeEmbeddings(model="multilingual-e5-large")
 
+
 initialize_pinecone()
+
+# query = "shiv ratri or shiv jayanti"
+
+# # Use the Pinecone index for embedding
+
+# embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
+
+# # Query the index using the proper method
+
+# index = pinecone.Index(
+#     index_name=INDEX_NAME,
+#     host="https://pinecone-r4fpwgv.svc.aped-4627-b74a.pinecone.io",
+#     api_key="d95ac410-5110-4ca9-ad8c-69eea8b8c09d"
+# )
+# results = index.query(  # Query the index
+#     vector=embedding,
+#     top_k=10,
+#     include_values=False,
+#     include_metadata=True
+# )
+# # Extract and print the top 10 chunks
+
+# top_chunks = results.get('matches', [])
+# for i, chunk in enumerate(top_chunks, start=1):
+#     print(f"--- Top {i} Chunk ---")
+#     print(f"Date: {chunk['metadata'].get('date', 'N/A')}")
+#     print(f"Title: {chunk['metadata'].get('title', 'N/A')}")
+#     print(f"Text: {chunk['metadata'].get('text', 'N/A')}\n")
 
 @app.get("/")
 def ret():
     return {"Hello": "World"}
 
-# Webhook verification endpoint
-@app.get("/webhook")
-async def verify_webhook(request: Request):
-    mode = request.query_params.get("hub.mode")
-    token = request.query_params.get("hub.verify_token")
-    challenge = request.query_params.get("hub.challenge")
-
-    if mode == "subscribe" and token == VERIFY_TOKEN:
-        return PlainTextResponse(content=challenge)  # Return as plain text
-    return PlainTextResponse(content="Verification failed", status_code=403)
-
-# Existing receive_message code
-@app.post("/webhook")
-async def receive_message(request: Request):
-    data = await request.json()
-    logging.debug("Received data: %s", data)
-
-    try:
-        # Verify if the request contains messages
-        entry = data.get("entry", [])
-        for change in entry[0].get("changes", []):
-            message = change.get("value", {}).get("messages", [])[0]
-            sender_id = message.get("from")
-            logging.debug("Processing message from sender: %s", sender_id)
-
-            if message.get("text", {}).get("body").lower() == "hello":
-                await send_message(sender_id, "Hello World!")
-        
-        return {"status": "received"}
-    except Exception as e:
-        logging.error("Error processing message: %s", e)
-        return {"error": "Internal Server Error"}, 500
-    
-# Function to send message back to WhatsApp user
-async def send_message(recipient_id, text):
-    url = f"https://graph.facebook.com/v13.0/{WHATSAPP_PHONE_NUMBER_ID}/messages"
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {WHATSAPP_ACCESS_TOKEN}"
-    }
-    data = {
-        "messaging_product": "whatsapp",
-        "to": recipient_id,
-        "text": {"body": text}
-    }
-
-    # Use aiohttp.ClientSession to send the request asynchronously
-    async with ClientSession() as session:
-        try:
-            async with session.post(url, headers=headers, json=data) as response:
-                response.raise_for_status()  # Raise an error for bad status codes
-                logging.debug("Message sent successfully")
-        except Exception as e:
-            logging.error("Failed to send message: %s", e)
-
-# Your existing Pinecone query endpoint
 @app.get("/{query}")
 async def query_pinecone(query: str):
+
+    # Use the Pinecone index for embedding
     embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
+
+    # Query the index
     index = pinecone.Index(
         index_name=INDEX_NAME,
-        host="https://pinecone-ztbvcbv.svc.aped-4627-b74a.pinecone.io",
+        host="https://pinecone-azpdmbh.svc.aped-4627-b74a.pinecone.io",
         api_key=PINECONE_API_KEY
     )
-    results = index.query(
+    
+    results = index.query(  # Query the index
         vector=embedding,
         top_k=7,
         include_values=False,
         include_metadata=True
     )
+
+    # Extract and return the top 10 chunks
+    top_chunks = results.get('matches', [])
     response = []
-    for i, chunk in enumerate(results.get("matches", []), start=1):
+    for i, chunk in enumerate(top_chunks, start=1):
         response.append({
             "rank": i,
             "date": chunk['metadata'].get('date', 'N/A'),
             "title": chunk['metadata'].get('title', 'N/A'),
             "text": chunk['metadata'].get('text', 'N/A')
         })
+    
     return response
+
+
+
