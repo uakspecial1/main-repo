@@ -1,31 +1,31 @@
-# Imports and Configuration
+
+
+#Imports and Configuration
 import os
 import re
-import requests
 from langchain.vectorstores import Pinecone as LangChainPinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
 
-# Load environment variables
 load_dotenv()
+
+from fastapi import FastAPI
 
 app = FastAPI()
 
 # Configuration
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_API_ENV = os.getenv("PINECONE_API_ENV")
-INDEX_NAME = os.getenv("INDEX_NAME")
-TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-PINECONE_HOST = os.getenv("PINECONE_HOST")
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
+PINECONE_API_KEY = '1f5403e4-2faa-481a-814d-19b3204261a8'
+PINECONE_API_ENV = 'us-east-1'
+INDEX_NAME = "pinecone"
+
 
 # Set up Pinecone
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pc = Pinecone(api_key=PINECONE_API_KEY)
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+
 
 # Pinecone Initialization
 def initialize_pinecone():
@@ -38,50 +38,62 @@ def initialize_pinecone():
         )
     return PineconeEmbeddings(model="multilingual-e5-large")
 
+
 initialize_pinecone()
+
+# query = "shiv ratri or shiv jayanti"
+
+# # Use the Pinecone index for embedding
+
+# embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
+
+# # Query the index using the proper method
+
+# index = pinecone.Index(
+#     index_name=INDEX_NAME,
+#     host="https://pinecone-r4fpwgv.svc.aped-4627-b74a.pinecone.io",
+#     api_key="d95ac410-5110-4ca9-ad8c-69eea8b8c09d"
+# )
+# results = index.query(  # Query the index
+#     vector=embedding,
+#     top_k=10,
+#     include_values=False,
+#     include_metadata=True
+# )
+# # Extract and print the top 10 chunks
+
+# top_chunks = results.get('matches', [])
+# for i, chunk in enumerate(top_chunks, start=1):
+#     print(f"--- Top {i} Chunk ---")
+#     print(f"Date: {chunk['metadata'].get('date', 'N/A')}")
+#     print(f"Title: {chunk['metadata'].get('title', 'N/A')}")
+#     print(f"Text: {chunk['metadata'].get('text', 'N/A')}\n")
 
 @app.get("/")
 def ret():
     return {"Hello": "World"}
 
-# Telegram Webhook Endpoint
-@app.post("/webhook")
-async def telegram_webhook(request: Request):
-    data = await request.json()
-    chat_id = data.get("message", {}).get("chat", {}).get("id")
-    message_text = data.get("message", {}).get("text", "")
-
-    if chat_id:
-        send_telegram_message(chat_id, "Hello World!")
-
-    return {"status": "ok"}
-
-# Helper function to send messages to Telegram
-def send_telegram_message(chat_id, text):
-    url = f"{TELEGRAM_API_URL}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": text
-    }
-    requests.post(url, json=payload)
-
-# Pinecone Query Endpoint
 @app.get("/{query}")
 async def query_pinecone(query: str):
+
+    # Use the Pinecone index for embedding
     embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
+
+    # Query the index
     index = pinecone.Index(
         index_name=INDEX_NAME,
-        host=PINECONE_HOST,
+        host="https://pinecone-azpdmbh.svc.aped-4627-b74a.pinecone.io",
         api_key=PINECONE_API_KEY
     )
-
-    results = index.query(
+    
+    results = index.query(  # Query the index
         vector=embedding,
         top_k=7,
         include_values=False,
         include_metadata=True
     )
 
+    # Extract and return the top 10 chunks
     top_chunks = results.get('matches', [])
     response = []
     for i, chunk in enumerate(top_chunks, start=1):
@@ -91,5 +103,8 @@ async def query_pinecone(query: str):
             "title": chunk['metadata'].get('title', 'N/A'),
             "text": chunk['metadata'].get('text', 'N/A')
         })
-
+    
     return response
+
+
+
