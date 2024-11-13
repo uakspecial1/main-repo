@@ -1,9 +1,8 @@
 # Imports and Configuration
 import os
 import re
-import requests
 import httpx
-from langchain.vectorstores import Pinecone as LangChainPinecone
+from langchain_community.vectorstores import Pinecone as LangChainPinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
