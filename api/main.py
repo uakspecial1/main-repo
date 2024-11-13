@@ -52,6 +52,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     if client:
+        print("Closing client session...")
         await client.aclose()
 
 @app.get("/")
