@@ -1,4 +1,3 @@
-# Imports and Configuration
 import os
 import re
 import httpx
@@ -27,7 +26,7 @@ TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-# Pinecone Initialization
+# Initialize Pinecone
 def initialize_pinecone():
     if INDEX_NAME not in pc.list_indexes().names():
         pc.create_index(
@@ -39,6 +38,21 @@ def initialize_pinecone():
     return PineconeEmbeddings(model="multilingual-e5-large")
 
 initialize_pinecone()
+
+# Global HTTP client session
+client: httpx.AsyncClient
+
+# FastAPI startup event
+@app.on_event("startup")
+async def startup_event():
+    global client
+    client = httpx.AsyncClient()
+
+# FastAPI shutdown event
+@app.on_event("shutdown")
+async def shutdown_event():
+    if client:
+        await client.aclose()
 
 @app.get("/")
 def ret():
@@ -64,9 +78,8 @@ async def send_telegram_message(chat_id, text):
         "text": text
     }
 
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=payload)
-        print("Send message response:", response.json())  # For debugging
+    response = await client.post(url, json=payload)
+    print("Send message response:", response.json())  # For debugging
 
 # Pinecone Query Endpoint
 @app.get("/{query}")
