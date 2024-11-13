@@ -2,6 +2,7 @@
 import os
 import re
 import requests
+import httpx
 from langchain.vectorstores import Pinecone as LangChainPinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
@@ -52,18 +53,21 @@ async def telegram_webhook(request: Request):
     message_text = data.get("message", {}).get("text", "")
 
     if chat_id:
-        send_telegram_message(chat_id, "Hello World!")
+        await send_telegram_message(chat_id, "Hello World!")
 
     return {"status": "ok"}
 
-# Helper function to send messages to Telegram
-def send_telegram_message(chat_id, text):
+# Helper function to send messages to Telegram (asynchronous)
+async def send_telegram_message(chat_id, text):
     url = f"{TELEGRAM_API_URL}/sendMessage"
     payload = {
         "chat_id": chat_id,
         "text": text
     }
-    requests.post(url, json=payload)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json=payload)
+        print("Send message response:", response.json())  # For debugging
 
 # Pinecone Query Endpoint
 @app.get("/{query}")
