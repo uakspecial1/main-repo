@@ -123,8 +123,11 @@ async def process_query(query: str) -> str:
 
 # Send a message to the Telegram user
 async def send_message(chat_id, text):
-    async with httpx.AsyncClient() as client:
+    client = httpx.AsyncClient()
+    try:
         await client.post(
             f"{TELEGRAM_API_URL}/sendMessage",
             json={"chat_id": chat_id, "text": text}
         )
+    finally:
+        await client.aclose()
