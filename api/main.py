@@ -22,7 +22,7 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 PINECONE_HOST = os.getenv("PINECONE_HOST")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
-# Create a global instance of AsyncClient (initialized during startup)
+# Global AsyncClient
 client = None
 
 # Set up Pinecone
@@ -46,13 +46,16 @@ initialize_pinecone()
 @app.on_event("startup")
 async def startup():
     global client
-    client = httpx.AsyncClient()
+    if client is None:  # Ensure client is initialized only once
+        client = httpx.AsyncClient()
 
 # Shutdown event to close the HTTP client session
 @app.on_event("shutdown")
 async def shutdown():
-    if client:
+    global client
+    if client is not None:
         await client.aclose()
+        client = None
 
 # Home endpoint
 @app.get("/")
@@ -139,6 +142,10 @@ async def process_query(query: str) -> str:
 
 # Send a message to the Telegram user
 async def send_message(chat_id, text):
+    global client
+    if client is None:  # Reinitialize client if missing
+        client = httpx.AsyncClient()
+
     try:
         response = await client.post(
             f"{TELEGRAM_API_URL}/sendMessage",
