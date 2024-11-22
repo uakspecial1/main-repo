@@ -116,8 +116,8 @@ async def shutdown():
 
 # Home endpoint
 @app.get("/")
-def ret():
-    return {"Hello": "World"}
+def read_root():
+    return {"message": "Hello, Vercel!"}
 
 @app.post("/query")
 def chatbot_query(query: str):
