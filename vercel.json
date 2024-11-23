@@ -1,9 +1,15 @@
 {
   "functions": {
     "api/*.py": {
-      "runtime": "python3.9"
+      "runtime": "@vercel/python"
     }
   },
+  "builds": [
+    {
+      "src": "api/*.py",
+      "use": "@vercel/python"
+    }
+  ],
   "routes": [
     {
       "src": "/webhook",
