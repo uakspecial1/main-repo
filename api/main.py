@@ -1,41 +1,32 @@
-from fastapi import FastAPI, Request, HTTPException
-import httpx
-from pydantic import BaseModel
-from dotenv import load_dotenv
-import uvicorn
 import os
-import re
-from langchain_community.vectorstores import Pinecone
+import json
+from typing import List, Optional
+from fastapi import FastAPI, HTTPException
+from langchain.vectorstores import Pinecone as LangChainPinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
-from typing import List
 from ctransformers import AutoModelForCausalLM
-import json
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-# Load sensitive data from .env
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_API_ENV = os.getenv("PINECONE_API_ENV")
 INDEX_NAME = os.getenv("INDEX_NAME")
 PINECONE_HOST = os.getenv("PINECONE_HOST")
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
 
 # Initialize FastAPI app
 app = FastAPI()
 
-# Global AsyncClient
-client = None
-
 # Set up Pinecone
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-pc = Pinecone(api_key=PINECONE_API_KEY)
+pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
-# Pinecone Initialization
+
 def initialize_pinecone():
+    """Initialize the Pinecone index and embeddings."""
     if INDEX_NAME not in pc.list_indexes().names():
         pc.create_index(
             name=INDEX_NAME,
@@ -45,18 +36,17 @@ def initialize_pinecone():
         )
     return PineconeEmbeddings(model="multilingual-e5-large")
 
-embeddings = initialize_pinecone()
 
+# Initialize Pinecone and LangChain embeddings
+embeddings = initialize_pinecone()
 index = pinecone.Index(
-    index_name=INDEX_NAME,
-    host=PINECONE_HOST,
-    api_key=PINECONE_API_KEY,
+    index_name=INDEX_NAME, host=PINECONE_HOST, api_key=PINECONE_API_KEY
 )
+
 
 def initialize_llm():
     """Initialize the Llama 2 model using ctransformers."""
     try:
-        print("Initializing LLM")
         llm = AutoModelForCausalLM.from_pretrained(
             "TheBloke/Llama-2-7B-Chat-GGML",
             model_type="llama",
@@ -71,7 +61,6 @@ def initialize_llm():
         print(f"Error initializing LLM: {str(e)}")
         return None
 
-llm = initialize_llm()
 
 def format_context(chunks: List[dict]) -> str:
     """Format retrieved chunks into a context string."""
@@ -80,6 +69,7 @@ def format_context(chunks: List[dict]) -> str:
         if "metadata" in chunk and "text" in chunk["metadata"]:
             context += f"{chunk['metadata']['text']}\n\n"
     return context.strip()
+
 
 def generate_llama2_response(llm, query: str, context: str) -> str:
     """Generate response using Llama 2 based on query and context."""
@@ -92,109 +82,58 @@ def generate_llama2_response(llm, query: str, context: str) -> str:
         Answer: [/INST]"""
 
         full_prompt = prompt_template.format(context=context, query=query)
-        print("Sending to LLM")
         response = llm(full_prompt, max_new_tokens=512)
-
         return response.strip()
     except Exception as e:
         return f"Error generating response: {str(e)}"
 
-# Startup event to initialize the HTTP client
-@app.on_event("startup")
-async def startup():
-    global client
-    if client is None:  # Ensure client is initialized only once
-        client = httpx.AsyncClient()
 
-# Shutdown event to close the HTTP client session
-@app.on_event("shutdown")
-async def shutdown():
-    global client
-    if client is not None:
-        await client.aclose()
-        client = None
-
-# Home endpoint
-@app.get("/")
-def read_root():
-    return {"message": "Hello, Vercel!"}
-
-@app.post("/query")
-def chatbot_query(query: str):
-    """API endpoint to process query and generate response."""
+@app.get("/chat")
+async def chat_get(query: str, top_k: Optional[int] = 3):
+    """Chatbot endpoint to handle GET requests."""
     try:
         query_embedding = embeddings.embed_query(query)
         results = index.query(
-            vector=query_embedding, top_k=3, include_values=False, include_metadata=True
+            vector=query_embedding, top_k=top_k, include_values=False, include_metadata=True
         )
         chunks = results.get("matches", [])
         if not chunks:
             return {"response": "I couldn't find any relevant information to answer your question."}
+
         context = format_context(chunks)
         response = generate_llama2_response(llm, query, context)
         return {"response": response}
     except Exception as e:
-        return {"error": str(e)}
+        raise HTTPException(status_code=500, detail=f"Error processing the query: {str(e)}")
 
-# Telegram webhook endpoint
-@app.post("/webhook")
-async def telegram_webhook(request: Request):
+
+@app.post("/chat")
+async def chat_post(payload: dict):
+    """Chatbot endpoint to handle POST requests."""
+    query = payload.get("query", "")
+    top_k = payload.get("top_k", 3)
+    if not query:
+        raise HTTPException(status_code=400, detail="Query is required.")
     try:
-        data = await request.json()
-        message = data.get("message", {})
-        chat_id = message.get("chat", {}).get("id")
-        text = message.get("text", "")
-
-        if not chat_id or not text:
-            raise HTTPException(status_code=400, detail="Invalid Telegram message")
-
-        # Process the query using Pinecone and generate a response
-        response_text = await process_query(text)
-
-        # Send the generated response to the Telegram user
-        await send_message(chat_id, response_text)
-
-        return {"status": "ok"}
-    except Exception as e:
-        return {"error": str(e)}
-
-# Process the query using Pinecone
-async def process_query(query: str) -> str:
-    try:
-        embedding = embeddings.embed_query(query)
-
+        query_embedding = embeddings.embed_query(query)
         results = index.query(
-            vector=embedding,
-            top_k=7,
-            include_values=False,
-            include_metadata=True
+            vector=query_embedding, top_k=top_k, include_values=False, include_metadata=True
         )
+        chunks = results.get("matches", [])
+        if not chunks:
+            return {"response": "I couldn't find any relevant information to answer your question."}
 
-        top_chunks = results.get('matches', [])
-        if not top_chunks:
-            return "No relevant information found."
-
-        response = format_context(top_chunks)
-        return response.strip()
-
+        context = format_context(chunks)
+        response = generate_llama2_response(llm, query, context)
+        return {"response": response}
     except Exception as e:
-        return f"Error processing query: {str(e)}"
-
-# Send a message to the Telegram user
-async def send_message(chat_id, text):
-    global client
-    if client is None:  # Reinitialize client if missing
-        client = httpx.AsyncClient()
-
-    try:
-        response = await client.post(
-            f"{TELEGRAM_API_URL}/sendMessage",
-            json={"chat_id": chat_id, "text": text}
-        )
-        response.raise_for_status()  # Raise an error if the request failed
-    except httpx.HTTPStatusError as e:
-        print(f"HTTP error occurred: {e.response.status_code}")
-    except Exception as e:
-        print(f"An error occurred: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing the query: {str(e)}")
 
 
+# Initialize Llama 2 model
+print("Initializing Llama 2 model (this might take a few minutes)...")
+llm = initialize_llm()
+if llm is None:
+    raise Exception("Failed to initialize the LLM model.")
+
+print("Server is ready!")
