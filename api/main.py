@@ -6,6 +6,8 @@ from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
 import httpx
+import asyncio
+import warnings
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 
