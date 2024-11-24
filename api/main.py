@@ -1,19 +1,17 @@
 # Imports and Configuration
 import os
-import re
 from langchain_community.vectorstores import Pinecone
 from langchain_pinecone import PineconeEmbeddings
 from pinecone import Pinecone, ServerlessSpec
 import pinecone
 import httpx
-import asyncio
-import warnings
-from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
+# FastAPI app instance
 app = FastAPI()
 
 # Configuration
@@ -97,16 +95,21 @@ async def query_pinecone(query: str):
 # Telegram webhook endpoint
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
-    data = await request.json()
-    message = data.get("message", {})
-    chat_id = message.get("chat", {}).get("id")
-    text = message.get("text", "")
+    try:
+        data = await request.json()
+        print(f"Incoming Telegram data: {data}")  # Debugging log
+        message = data.get("message", {})
+        chat_id = message.get("chat", {}).get("id")
+        text = message.get("text", "")
 
-    if chat_id and text:
-        response_text = await process_query(text)
-        await send_message(chat_id, response_text)
+        if chat_id and text:
+            response_text = await process_query(text)
+            await send_message(chat_id, response_text)
 
-    return {"status": "ok"}
+        return {"status": "ok"}
+    except Exception as e:
+        print(f"Error in webhook: {str(e)}")
+        return {"status": "error", "details": str(e)}
 
 # Process the query using Pinecone
 async def process_query(query: str) -> str:
