@@ -1,4 +1,3 @@
-# Imports and Configuration
 import os
 from langchain_community.vectorstores import Pinecone
 from langchain_pinecone import PineconeEmbeddings
@@ -40,7 +39,8 @@ def initialize_pinecone():
         )
     return PineconeEmbeddings(model="multilingual-e5-large")
 
-initialize_pinecone()
+# Initialize Pinecone
+pinecone_embeddings = initialize_pinecone()
 
 # Startup event to initialize the HTTP client
 @app.on_event("startup")
@@ -65,7 +65,7 @@ def ret():
 # Query Pinecone index directly
 @app.get("/{query}")
 async def query_pinecone(query: str):
-    embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
+    embedding = pinecone_embeddings.embed_query(query)
 
     index = pinecone.Index(
         index_name=INDEX_NAME,
@@ -114,7 +114,7 @@ async def telegram_webhook(request: Request):
 # Process the query using Pinecone
 async def process_query(query: str) -> str:
     try:
-        embedding = PineconeEmbeddings(model="multilingual-e5-large").embed_query(query)
+        embedding = pinecone_embeddings.embed_query(query)
 
         index = pinecone.Index(
             index_name=INDEX_NAME,
