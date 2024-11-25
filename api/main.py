@@ -60,7 +60,7 @@ async def shutdown():
 # Home endpoint
 @app.get("/")
 def ret():
-    return {"Hello": "World"}
+    return {"Welcome": "to GitaGPT"}
 
 # Query Pinecone index directly
 @app.get("/query")
