@@ -16,7 +16,7 @@ app = FastAPI()
 # Configuration
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_API_ENV = os.getenv("PINECONE_API_ENV")
-INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
+INDEX_NAME = os.getenv("INDEX_NAME")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 PINECONE_HOST = os.getenv("PINECONE_HOST")
 TELEGRAM_API_URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}"
