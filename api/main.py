@@ -62,8 +62,8 @@ async def shutdown():
 def ret():
     return {"Hello": "World"}
 
-# Query Pinecone index with dynamic route
-@app.get("/query/{query}")
+# Query Pinecone index directly
+@app.get("/query")
 async def query_pinecone(query: str):
     embedding = pinecone_embeddings.embed_query(query)
 
@@ -96,13 +96,14 @@ async def query_pinecone(query: str):
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
     try:
-        data = await request.json()
+        data = await request.json()  # Parse incoming Telegram update
         print(f"Incoming Telegram data: {data}")  # Debugging log
         message = data.get("message", {})
         chat_id = message.get("chat", {}).get("id")
         text = message.get("text", "")
 
         if chat_id and text:
+            # Process the user's message and send a response
             response_text = await process_query(text)
             await send_message(chat_id, response_text)
 
