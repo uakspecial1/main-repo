@@ -5,4 +5,3 @@ pinecone
 pinecone-client
 fastapi
 uvicorn
-ctransformers
